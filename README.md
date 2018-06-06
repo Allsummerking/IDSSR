@@ -119,30 +119,8 @@ less indel-result.list  | awk '$7>19  &&  $8>3' > indel-result.filter
 
 
 
-SSR_INDEL.Combine: Combining the results of part one and part two for identify polymorphic SSRs with INDEL features. 
+SSR_INDEL.Combine: Combining the results of part one and part two for identification polymorphic SSRs with INDEL features. 
 
 Usage: ./SSR_INDEL.Combine <SSR_final_result.file>  <INDEL_final_result.file>    
 
 ### END ###
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
