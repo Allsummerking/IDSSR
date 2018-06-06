@@ -3,7 +3,7 @@ An Efficient Pipeline for identify Polymorphic SSRs with INDEL Features
 This pipeline contains three parts. The function, usage and parameters of all the steps in every part were showed as following: 
 
 
-### Part one: Find out the simple sequence repeats in the genome and design the primer for them in ten steps.###
+### Part one: Find out the simple sequence repeats in the genome and design the primer for them in ten steps. ###
 
 
 
@@ -115,10 +115,8 @@ less indel-result.list  | awk '$7>19  &&  $8>3' > indel-result.filter
 ### Part three: Combine the final result. ###
 
 
-SSR_INDEL.Combine: combining the results of part one and part two for identify polymorphic SSRs with INDEL features
+SSR_INDEL.Combine: combining the results of part one and part two for identify polymorphic SSRs with INDEL features.
 
 USAGE:./SSR_INDEL.Combine <SSR final result file> <INDEL final result file>
-
-
 
 
