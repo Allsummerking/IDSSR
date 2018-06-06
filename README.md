@@ -1,5 +1,6 @@
 # IDSSR
 An Efficient Pipeline for identify Polymorphic SSRs with INDEL Features
+
 This pipeline contains three parts. The function, usage and parameters of all the steps in every part were showed as following: 
 
 
