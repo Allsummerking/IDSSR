@@ -59,5 +59,6 @@ Part one and part two can be concurrent execution.
 
 
 Part three: Combine the final result.
+
 SSR_INDEL.Combine: combining the results of part one and part two for identify polymorphic SSRs with INDEL features
 USAGE:./SSR_INDEL.Combine <SSR final result file> <INDEL final result file>
