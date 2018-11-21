@@ -31,7 +31,7 @@ Example:   ./s1.Find_PotentialSSR --flank 150 --ssr2 6 --ssr3 4 --ssr4 4 --ssr5 
 
 s2.Designer_Primer: Using primer3 design primers that are targeted to amplify an SSR containing sequence region
 
-Usage:  ./s2.Designer_Primer <ssr.out> <raw_primer_file> <primer_results_file> 
+Usage:  ./s2.Designer_Primer <input ssr.out> <out put raw_primer_file> <out put primer_results_file> 
 
 
 
