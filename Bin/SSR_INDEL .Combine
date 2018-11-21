@@ -1,0 +1,85 @@
+#!/usr/bin/perl -w 
+use strict;
+use Data::Dumper;
+my $usage=<<USAGE;
+USAGE:$0 <SSR file> <INDEL file>
+USAGE
+die $usage if @ARGV<2;
+my $ssr_file=$ARGV[0];
+my $snp_file=$ARGV[1];
+my(%ssr,%snp);
+read_ssr($ssr_file,\%ssr);
+read_snp($snp_file,\%snp);
+print "Chr/Scaffold_ID\tSSR\tRepeat_motif(repeat_unit*repeat_numbers)\tSSR_start\tSSR_length\tProduct_sequence\tForward_primer\tForward_tm\tReverse_primer\tReverse_tm\tProduct_len\tProduct_len\tINDEL_Type\tINDEL_Allele\n";
+for my $chr(keys %ssr){
+	  next unless(exists $snp{$chr}); 
+my @ssr=@{$ssr{$chr}};
+	my @snp=@{$snp{$chr}};
+	for(my $i=0;$i<@ssr;$i++){
+		my $ssr_start=$ssr[$i][1];
+		my $ssr_end=$ssr[$i][2];
+		my $ssr_unit=$ssr[$i][0];
+		for(my $j=0;$j<@snp;$j++){
+			my $snp_point=$snp[$j][0];
+			my $snp_start=$snp[$j][1];
+			my $snp_end=$snp[$j][2];
+			if($snp_point=~/(([ATCG]{2,6})\2{1,})/gi){
+				my $snp_unit=$2;
+				if(($snp_start >=$ssr_start )&& ($snp_end<=$ssr_end) && ($ssr_unit eq $snp_unit)){
+					my $ssr_len=$ssr[$i][-1];
+					if($snp[$j][3] eq "deletion"){
+						my $product=$ssr_len-length($snp_point);
+						print "$ssr[$i][3]\t$product\tdeletion\t$snp_point\n";
+						 }else{
+							my $product=$ssr_len+length($snp_point);
+							print "$ssr[$i][3]\t$product\tinsertion\t$snp_point\n";
+							 }
+						 }
+			}else{
+			if(($snp_start >=$ssr_start )&& ($snp_end<=$ssr_end) && ($ssr_unit eq $snp_point)){
+				my $ssr_len=$ssr[$i][-1];
+				if($snp[$j][3] eq "deletion"){
+					my $product=$ssr_len-length($snp_point);
+					print "$ssr[$i][3]\t$product\tdeletion\t$snp_point\n";
+					}else{
+						my $product=$ssr_len+length($snp_point);
+						print "$ssr[$i][3]\t$product\tinsertion\t$snp_point\n";
+						}
+				}
+			}
+		}
+	 }
+}
+sub read_snp{
+	my $file=shift;
+	my $ref=shift;
+	open IN,$file || die $!;
+	while(<IN>){
+	my @a=split;
+	my($num)=$a[2]=~/(\d+)$/;
+	next if($num <2);
+	my $unit=$a[3];
+	my $start=$a[1];
+	my $end=$start+length($unit)-1;
+	push @{$ref->{$a[0]}},[$unit,$start,$end,"deletion"] if($a[2]=~/^D/);
+	push @{$ref->{$a[0]}},[$unit,$start,$end,"insertion"] if($a[2]=~/^I/);
+	}
+	close IN;
+}
+sub read_ssr{
+	my $file=shift;
+	my $ref=shift;
+	open IN,$file || die $!;
+	<IN>;
+	while(<IN>){
+		 chomp;
+		 my @a=split /\t/;
+		 my($id)=$a[0]=~/^(\S+)/;
+		 my($ssr_unit)=$a[2]=~/^(\w+)\(/;
+		 my $len=length($ssr_unit);
+		 my $start=$a[3]-1-$len;
+		 my $end=$start+$a[4]-1+$len;
+		 push @{$ref->{$id}},[$ssr_unit,$start,$end,$_,$a[-1]];
+	}
+	close IN;
+}
