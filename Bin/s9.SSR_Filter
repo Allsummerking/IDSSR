@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+   use strict;
+my $usage=<<USAGE;
+ Usage:$0  <product_ssr.out> <inter_primer.out> <only_primer.out>
+USAGE
+die $usage if @ARGV<3;
+my %tmp;
+open FILE,"$ARGV[0]" || die $!;
+while(<FILE>){ 
+    my @a=split /\t/;
+    my $id=$1 if($a[0]=~/^(\S+)_\d+$/);
+       $tmp{$id}++;
+}
+close FILE;
+open IN,"$ARGV[1]" || die $!;
+open OUT,">$ARGV[2]" || die $!;
+while(<IN>){
+   my @t=split /\t/;
+   my $inter=$t[1];
+      $inter=~ s/_f$|_r$//g;
+    if(exists $tmp{$inter}){ }else{print "$inter\n";}
+    if($tmp{$inter} eq 1){
+       print OUT $_;
+    }
+}
+close IN;
+close OUT;

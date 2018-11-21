@@ -1,0 +1,42 @@
+#!/usr/bin/perl  
+
+#use strict;
+## extract the blast as the 3` permit at most 1 mismatch;
+# you can decide the mismatch youself
+my $usage=<<USAGE;
+	Usage:perl $0 <blast.out> <query_sbjct.out> <stac.out> <mis_match> 
+USAGE
+die $usage if @ARGV<4;
+
+open(IN,"$ARGV[0]") or die;
+open(OUT,">$ARGV[1]") or die;
+open(OUT2,">$ARGV[2]") or die;
+
+while(<IN>){
+	chomp;
+	if(/^Query= (\S+)/){
+		print OUT2 "$query_name\t$count\n";
+		$count=0;
+		$query_name=$1;
+	}elsif(/(\d+)\s+letters/){
+		$query_len=$1;
+	}elsif(/>(\S+)/){
+		$sbjct_name=$1;
+	}elsif(/^Query:\s+(\d+)\s+\S+\s+(\d+)/){
+		$query_star=$1;
+		$query_end=$2;
+	}
+        if(($query_len-($query_end-$query_star+1)>=$ARGV[3])||(($query_len-$query_end)>1)){# contain "$query_len-$query_end=1" this situation;
+             next;
+        }elsif(/^Sbjct:\s+(\d+)\s+\S+\s+(\d+)/){
+		$count++;
+		$sbjct_star=$1;
+		$sbjct_end=$2;
+		$sbjct="$sbjct_name\t$sbjct_star\t$sbjct_end";# The position of genome
+		$hash{$query_name}=$sbjct;
+		print OUT "$query_name\t$hash{$query_name}\n";
+		$sbjct="";#Clear the position
+	}
+}
+close OUT;
+close IN;

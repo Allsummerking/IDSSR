@@ -1,0 +1,134 @@
+#!/usr/bin/perl
+=head1 Name
+    1ssr_finder.pl
+
+=head1 Description
+Search for simple sequence repeats in FASTA-formatted DNA sequences
+motif-repeat parameters:specify motif length, minimum number of repeats
+modify according to researcher's preferences
+
+=head1 Version 
+  Author:S.Cartinhour
+  Version:1.0,	Date:  5/2000
+  Note:
+
+=head1 Usage
+   perl 1.ssr_finder.pl [options] <sequences.fa> <ssr.out>
+     --flank    set the flank length of ssr, default=150
+     --ssr2	set the repeat numbers of motif two,default 4 times
+     --ssr3	set the repeat numbers of motif three,default 4 times
+     --ssr4     set the repeat numbers of motif four,default 4 times
+     --ssr5     set the repeat numbers of motif five,default 4 times
+     --ssr6     set the repeat numbers of motif six,default 4 times
+=head1 Example
+   perl 1ssr_finder.pl --flank 150 --ssr2 6 --ssr3 4 --ssr4 4 --ssr5 4 --ssr6 4  sequences.fa ssr.out
+
+=cut
+
+use Getopt::Long;
+$/ = ">";
+$| = 1;
+my($seqcount,$pos1,$pos2,$max,$flank_length,$ssr_length,$ssr2,$ssr3,$ssr4,$ssr5,$ssr6);
+GetOptions(
+	  "flank:i"=>\$flank_length,
+	  "ssr:i"=>\$ssr_length,
+	  "ssr2:i"=>\$ssr2,
+	  "ssr3:i"=>\$ssr3,
+	  "ssr4:i"=>\$ssr4,
+	  "ssr5:i"=>\$ssr5,
+	  "ssr6:i"=>\$ssr6
+);
+$flank_length ||=150;
+#$ssr_length ||=22;
+$ssr2 ||=6;
+$ssr3 ||=4;
+$ssr4 ||=4;
+$ssr5 ||=4;
+$ssr6 ||=4;
+die `pod2text $0` if @ARGV<2;
+#motif-repeat parameters:
+#specify motif length, minimum number of repeats.
+#modify according to researcher's preferences
+my @specs = ([2,$ssr2],
+	     [3,$ssr3], 
+	     [4,$ssr4],
+             [5,$ssr5],
+             [6,$ssr6]);
+
+my $suffix=0;
+
+open IN,"$ARGV[0]" || die $!;
+open OUT,">$ARGV[1]" || die $!;
+while(<IN>){ #FASTA formatted sequences as input
+    chomp;
+    my ($titleline, $sequence) = split(/\n/,$_,2);
+    next unless ($sequence && $titleline);
+    $seqcount++;
+    my ($id) = $titleline =~ /^(\S+)/; #the ID is the first whitespace- 
+    $sequence =~ s/\s+//g; #concatenate multi-line sequence
+    study($sequence);     #is this necessary?
+    my $seqlength = length($sequence);
+                            #track multiple ssrs within a single sequence
+    my %locations;        #track location of SSRs as detected
+     my $i;
+    for($i=0; $i<scalar(@specs); $i++){ #test each spec against sequence
+	my $motiflength = $specs[$i]->[0];
+	my $minreps = $specs[$i]->[1] - 1;#因为反引用默认情况下会匹配一次，如果不减1，那么类是ssr重复3次，那么就不包括3次must subtract 1;
+	my $regexp = "(([GATC]{$motiflength})\\2{$minreps,})";
+	while ($sequence =~ /$regexp/ig){#进行不分大小写的匹配
+	    my $motif = uc($2);
+            my $ssr = $1;
+            my $redundant;
+           for($j=$motiflength-1;$j>0;$j--){
+               my $redmotif = "([ACGT]{$j})\\1{".($motiflength/$j-1)."}";
+                  $redundant=1 if($motif=~/$redmotif/ig);
+           }
+            next if $redundant; 	#reject "aaaaaaaaa", "ggggggggggg", etc.
+	    next if &homopolymer($motif,$motiflength); 	#comment out this line to report monomers
+	    my $ssrlength = length($ssr);          #overall SSR length
+#            next if($ssrlength< $ssr_length);
+	    my $repeats = $ssrlength/$motiflength; #number of rep units
+	    my $end = pos($sequence);              #where SSR ends
+	    pos($sequence) = $end - $motiflength;  #see docs
+	    my $start = $end - $ssrlength + 1;     #where SSR starts  
+           
+            if($start<$flank_length){
+                 $pos1=0;
+             }else{
+                $pos1=$start-$flank_length -1;
+             }
+             if((($max=length($sequence))-$end)< $flank_length){
+                 $pos2=$max;
+             }else{
+                 $pos2=$end+$flank_length;
+             }
+              if(&novel($start,\%locations)){
+                  $seqleft=substr($sequence,$pos1,$start-$pos1-1);
+                  $seqcenter=substr($sequence,$start-1,$end-$start+1);
+                  $seqright=substr($sequence,$end,$pos2-$end);    
+                  $suffix++;
+		  $ssr_number++;
+                  $seq_id="$id"."_"."$suffix";
+	        print OUT $seq_id,"\t",$ssr,"\t",$motif,"\t",$start,"\t",$ssrlength,"\t",$seqleft,"[",$seqcenter,"]",$seqright,"\n";  #count SSR only once
+              }
+	}
+    }
+}
+print "sequence number: $seqcount\n";
+print "ssr number: $suffix\n";
+sub homopolymer {  #return true if motif is repeat of single nucleotide
+    my ($motif,$motiflength) = @_;
+    my ($reps) = $motiflength - 1;
+    return 1 if ($motif =~ /([GATC])\1{$reps}/i);
+    return 0;
+}
+
+sub novel {
+    my($position, $locationsref) = @_;
+    if(defined $locationsref->{$position}) {
+       return undef;
+   } else {
+       $locationsref->{$position} = 1;
+       return 1;
+   }
+}

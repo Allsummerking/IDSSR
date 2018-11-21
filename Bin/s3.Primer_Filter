@@ -1,0 +1,28 @@
+#!/usr/bin/perl 
+
+my $usage=<<USAGE;
+	Usage:$0 <primer_results_file> <rescreen_file> <blastin_file>
+USAGE
+die $usage if @ARGV<3;
+
+open (P,$ARGV[0]) or die;
+open (R,">$ARGV[1]") or die;
+open (B,">$ARGV[2]") or die;
+my ($good,$bad);
+my (@tmp1,@tmp);
+while(<P>){
+	chomp;
+	@tmp=split;
+	if (( $tmp[6] =~ /(([ATGC]{2,6})\2{4,})/gi ) or ( $tmp[8] =~ /(([ATGC]{2,6})\2{4,})/gi )){#这里需要注意的是引物序列中ssr的重复次数不包括4次
+                                                                                                  #becareful here###
+		$bad++; ## exclude the primer itself are tandem repeat
+	} else {
+		$good++;
+		print R "$tmp[0]\t$tmp[1]\t$tmp[2]\t$tmp[3]\t$tmp[4]\t$tmp[5]\t$tmp[6]\t$tmp[7]\t$tmp[8]\t$tmp[9]\t$tmp[10]\n";
+		print B ">$tmp[0]_f\n$tmp[6]\n>$tmp[0]_r\n$tmp[8]\n";
+	}
+}
+print "good: $good\nbad:  $bad\n";
+close B;
+close R;
+close P;

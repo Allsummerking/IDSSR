@@ -1,0 +1,78 @@
+#!/usr/bin/perl -w
+# using primer3 design primers that are targeted to amplify an SSR containing sequence region
+# add the primer3_config file into the primer3_core ####
+use strict;
+use FindBin qw($Bin $Script);
+my $usage=<<USAGE;
+	Usage:$0 <ssrout_file> <raw_primer_file> <primer_results_file> 
+USAGE
+die $usage if @ARGV<3;
+my (%primehash,$line);
+my $counter = 0;
+my $general= "$Bin/primer3-2.3.4/src";
+my $primer3=$general."/primer3_core";  
+my $primer3_config=$general."/primer3_config/";
+my $opt .=" -error=./design_primer.error ";
+   $opt .=" -strict_tags ";
+
+open (SSRIN, "$ARGV[0]") or die;
+open (RAW, ">$ARGV[1]") or die;
+open (OUT, ">$ARGV[2]") or die;
+
+while ($line = <SSRIN>)  {
+  	chomp $line;
+        my @columns = split(/\t/,$line);
+  	my @seq = split(/\[|\]/,$columns[5]);
+	next unless($seq[0] && $seq[1] && $seq[2]);
+        my $length_left = length($seq[0]);
+ 	my $length_mask = length($seq[1]);
+        my $length_right = length($seq[2]);
+        my $t1 = $length_left+1; #becareful here these place add 1 or not is a question?
+  	my $t2 = $length_mask;
+  	open (TEM, ">primerin.txt") or die;
+  	print TEM "SEQUENCE_ID=",$columns[1],"\n";
+  	print TEM "SEQUENCE_TEMPLATE=",$seq[0],$seq[1],$seq[2],"\n";
+  	print TEM "SEQUENCE_TARGET=", $t1, ",", $t2, "\n";
+	print TEM "SEQUENCE_EXCLUDED_REGION=", $t1, ",", $t2, "\n";
+	print TEM "PRIMER_THERMODYNAMIC_PARAMETERS_PATH=",$primer3_config,"\n";
+	print TEM "PRIMER_PRODUCT_SIZE_RANGE=80-160 80-240 80-300\n";
+	print TEM "PRIMER_NUM_RETURN=5\n";
+  	print TEM "PRIMER_OPT_SIZE=24\n";
+  	print TEM "PRIMER_MIN_SIZE=20\n";
+  	print TEM "PRIMER_MAX_SIZE=28\n";
+  	print TEM "PRIMER_OPT_TM=63\n";
+  	print TEM "PRIMER_MIN_TM=60\n";
+  	print TEM "PRIMER_MAX_TM=65\n";
+  	print TEM "PRIMER_PAIR_MAX_DIFF_TM=1\n";
+  	print TEM "=\n";
+  	close TEM;
+
+  	my $primer_file = `$primer3 $opt  < primerin.txt`;
+  	print RAW "######## $columns[1] #########\n";
+  	print RAW $primer_file, "\n";
+  	my @prime_out = split(/\n/, $primer_file);
+
+  	foreach my $i (0..$#prime_out)  {
+    	my ($varname,$varvalue) = split(/=/, $prime_out[$i]);
+    	    $primehash{$varname} = $varvalue;
+  	}
+  	if ($primehash{'PRIMER_LEFT_0_SEQUENCE'})  {
+    	    $counter++;
+    	print OUT "$columns[0]\t$columns[1]\t$columns[2]\t$columns[3]\t$columns[4]";
+    	print OUT "\t$seq[0]$seq[1]$seq[2]";
+    	print OUT "\t", $primehash{'PRIMER_LEFT_0_SEQUENCE'};
+    	print OUT "\t", $primehash{'PRIMER_LEFT_0_TM'};
+    	print OUT "\t", $primehash{'PRIMER_RIGHT_0_SEQUENCE'};
+    	print OUT "\t", $primehash{'PRIMER_RIGHT_0_TM'};
+    	print OUT "\t", $primehash{'PRIMER_PAIR_0_PRODUCT_SIZE'};
+    	print OUT "\n";
+  	}
+	########################################################
+	#Add next 10 lines
+	########################################################
+  	undef %primehash;
+}
+close OUT;
+close SSRIN;
+close RAW;
+print "repeats primed: ", $counter, "\n";

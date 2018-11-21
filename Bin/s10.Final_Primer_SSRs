@@ -1,0 +1,50 @@
+#!/usr/bin/perl -w
+  use strict;
+my $usage=<<USAGE;
+   Usage: $0 <Only_scaffold.out> <product_ssr.out>  <rescreen.out> <final_primer.out>
+USAGE
+die $usage if @ARGV < 4;
+my (%primer,%hash,%inter);
+open IN,"$ARGV[0]" || die $!;
+while(<IN>){
+     my @a=split /\t/;
+     my $id=$a[1];
+     $id=~s/_f$|_r$//g;
+     $primer{$id}=1;
+}
+close IN;
+open PRODUCT,"$ARGV[1]" || die $!;
+while(<PRODUCT>){
+    chomp;
+    my @t=split /\t/;
+    my $tmp_id=$t[0];
+       $tmp_id=~s/_\d+$//g;
+       if(exists($primer{$tmp_id})){
+          $inter{$tmp_id}=$t[5];
+       }
+}
+close PRODUCT;
+open FILE,"$ARGV[2]" || die $!;
+while(<FILE>){
+     my @b=split /\t/;
+     if(exists($primer{$b[0]})){
+        my $id=$b[0];
+	$id=~s/_\d+$//g;
+        my $s_len=length($b[2]);
+	my $num=$b[4]/$s_len;
+        $hash{$id}{$s_len}{$num}{$b[3]}="$id\t$b[1]\t$b[2]($s_len\*$num)\t$b[3]\t$b[4]\t$inter{$b[0]}\t$b[6]\t$b[7]\t$b[8]\t$b[9]\t$b[10]";
+     }
+}
+close FILE;
+open OUT,">$ARGV[3]" || die $!;
+print OUT "Scaffold\tSSR\tSSR_motif\(unit\*Repeat_number\)\tSSR_start\tSSR_product\tForward_primer\tForward_primer_tm\tReverse_primer\tReverse_primer_tm\tSSR_product_length\n";
+foreach my $k1(keys %hash){
+       foreach my $k2(sort {$b<=>$a} keys %{$hash{$k1}}){
+               foreach my $k3(sort {$b<=>$a} keys %{$hash{$k1}{$k2}}){
+		     foreach my $k4(keys %{$hash{$k1}{$k2}{$k3}}){
+		       print OUT $hash{$k1}{$k2}{$k3}{$k4};
+	            } 
+	       }
+       }
+}
+close OUT;     

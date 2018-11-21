@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w
+use strict;
+#Changed by Zhang Shichao
+#The procedure is used to get all the pair primers out of genomics,can match the same positon
+my $usage=<<USAGE;
+	Usage:perl $0 <query_sbjct_file> <primer.tab>
+USAGE
+die $usage if @ARGV<2;
+
+open(IN,"$ARGV[0]") or die "$!";
+open(OUT,">$ARGV[1]") or die;
+my($PrimerID,%hash);
+while(<IN>){
+	chomp ;
+	next if $_=~/^\s*$/;
+	my @arry=split;
+	$PrimerID=$arry[0];
+	$PrimerID=~s/_f$|_r$//g;
+	push @{$hash{$PrimerID}{$arry[0]}},[$arry[1],$arry[2],$arry[3]];
+}
+foreach $PrimerID (sort keys %hash) {
+	foreach my $PrimerF(@{$hash{$PrimerID}{"$PrimerID\_f"}}){	
+		foreach my $PrimerR(@{$hash{$PrimerID}{"$PrimerID\_r"}}){	
+			my($fVSchr,$fBg,$fEd)=($PrimerF->[0],$PrimerF->[1],$PrimerF->[2]);
+			my($rVSchr,$rBg,$rEd)=($PrimerR->[0],$PrimerR->[1],$PrimerR->[2]);
+			next if($fVSchr ne $rVSchr); 
+			if( ($fBg<$fEd) && ($rBg>$rEd) && ($fEd<$rEd) ){
+				print OUT"$fVSchr\t$PrimerID\_f\t$fBg\t$fEd\t$PrimerID\_r\t$rBg\t$rEd\n";
+			}
+		}
+	}
+}
+#The input format:
+=cut 
+chromosome01_1_f	chromosome01	1	200
+chromosome01_1_r	chromosome01	400	300	
+chromosome01_1_r	chromosome01	400	200	
+
+chromosome01_2_f	chromosome02	1	200	
+chromosome01_2_r	chromosome02	400	300	
+chromosome01_2_r	chromosome02	30000	20000	
+
+chromosome01_3_f	chromosome01	1	200	
+chromosome01_3_f	chromosome02	1	200	
+chromosome01_3_f	chromosome02	19900	19910	
+chromosome01_3_r	chromosome01	400	300	
+chromosome01_3_r	chromosome02	30000	20000	
+=cut

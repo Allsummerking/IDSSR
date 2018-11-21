@@ -1,0 +1,78 @@
+#!/usr/bin/perl -w
+use strict;
+my $usage=<<USAGE;
+ Usage: $0 <primer.out> <rescreen_out> <inter_primer.out> 2000
+ if you want to find only position primers in the genome,please set the fourth parameter 0,
+ else you can set the parameter other values default value is 2000.
+USAGE
+die $usage if @ARGV<3;
+my $dif =$ARGV[3];
+   $dif ||=2000;
+my(%hash,%new,%primer,%product,%tmp,$inter);
+my $count=0;
+open IN,"$ARGV[0]" || die $!;
+open OUT,">$ARGV[2]" || die $!;
+while(<IN>){
+   chomp;
+   my @arry=split /\t/;
+   my $mm=$arry[1];
+      $mm=~ s/_f$|_r$//g;
+      $new{$mm}=$_;
+    if(exists($hash{$mm})){
+          $hash{$mm}=0;
+    }else{
+	  $hash{$mm}=1;
+    }
+}
+close IN;
+foreach my $id(keys %new){
+      if ($hash{$id} eq 1){
+         print OUT "$new{$id}\n";#get the only one primer source id;
+    }
+}
+open FILE,"$ARGV[0]" || die $!;
+while(<FILE>){
+    chomp;
+    my @bb=split /\t/;
+    my $nn=$bb[1];
+       $nn=~s/_f$|_r$//g;
+       next if ($hash{$nn});
+       my $product=$bb[5]-$bb[2]+1;
+       push @{$primer{$nn}},[$product,$_];   
+}
+close FILE;
+open RE,"$ARGV[1]" || die $!;
+while(<RE>){
+   chomp;
+   my @hh=split /\t/;
+      $product{$hh[0]}=$hh[-1];
+}
+close RE;
+foreach my $name(sort keys %primer){
+	my $len=$product{$name};
+	my @pp=@{$primer{$name}};
+	   @pp=sort{$a->[0] <=> $b->[0]}@pp;
+        for(my $i=0;$i<@pp;$i++){
+	      if( abs($pp[$i]->[0]-$len) > $dif){
+	          $count++;	       
+	          $inter=$pp[$i]->[1];
+             if($count>=1){
+	          print OUT "$inter\n";
+        }
+       }
+      }
+	$count=0;
+}
+close OUT;
+=cut
+	if($count==1){
+	
+	    foreach my $mm(@pp){
+		 if($mm->[0] eq $product{$name}){
+		  print OUT "$mm->[1]\n";
+	         }
+	    }
+       }
+       $count=0;
+}	
+close OUT;
