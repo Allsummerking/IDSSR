@@ -1,5 +1,6 @@
 # IDSSR
-An Efficient Pipeline for identify Polymorphic SSRs with INDEL Features
+An Efficient Pipeline for identify Polymorphic SSRs with INDEL Features.
+All scripts are in the Bin directory, please download and then uncompress the files named *tar.gz .
 
 This pipeline contains three parts. The function, usage and parameters of all the steps in every part were showed as following: 
 
