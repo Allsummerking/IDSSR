@@ -87,7 +87,7 @@ s10.Final_Primer_SSRs: Perform the final primer and ssr results.
 Usage: ./S10.Final_Primer_SSRs <only_primer.out> <product_ssr.out>  <rescreen.out> <final_primer.out>
 
 
-
+If you are still confuse, please download the Example directory and following the shell script.
 
 ### Part two: Perform the indels calling. ###
 
