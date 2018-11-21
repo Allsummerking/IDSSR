@@ -1,2 +1,0 @@
-formatdb -i prefix.genome.fa -p F -o T
-blastall -i prefix.blastin  -d genome.fa -p blastn -o prefix.blast.out -F F -b 10000 -v 10000
