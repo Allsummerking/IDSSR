@@ -25,13 +25,13 @@ USAGE: ./s1.Find_PotentialSSR [options] <sequences.fa> <ssr.out>
      
      --ssr6     set the repeat numbers of motif six,default 4 times
      
-Example:   ./s1.Find_PotentialSSR --flank 150 --ssr2 6 --ssr3 4 --ssr4 4 --ssr5 4 --ssr6 4  genome.sequences.fa ssr.out
+Example:   ./s1.Find_PotentialSSR --flank 150 --ssr2 6 --ssr3 4 --ssr4 4 --ssr5 4 --ssr6 4  genome.fa ssr.out
 
 
 
 s2.Designer_Primer: Using primer3 design primers that are targeted to amplify an SSR containing sequence region
 
-Usage:./s2.Designer_Primer <ssrout_file> <raw_primer_file> <primer_results_file> 
+Usage:./s2.Designer_Primer <ssr.out> <raw_primer_file> <primer_results_file> 
 
 
 
@@ -43,25 +43,25 @@ Usage:./s3.Primer_Filter <primer_results_file> <rescreen_file> <blastin_file>
 
 s4.Formatdb_Blast: alignment the primer sequences and the genome with Blast inorder to prevent the primer containing multi-mapping.
 
-formatdb -i prefix.genome.fa -p F -o T
+formatdb -i genome.fa -p F -o T
 
-blastall -i prefix.blastin  -d genome.fa -p blastn -o prefix.blast.out -F F -b 10000 -v 10000
+blastall -i blastin_file  -d genome.fa -p blastn -o blast.out -F F -b 10000 -v 10000
 
 s5.Blast_Parse: extract the blast result as the 3` permit at most 1 mismatch.
 
-Usage:perl ./s5.Blast_Parse <blast.out> <query_sbjct.out> <stac.out> <mis_match> 
+Usage:perl ./s5.Blast_Parse <blast.out> <query_sbjct.out> <stac.out> <mis_match>  Note: mis_match should be a number. 
 
 
 
 s6.Primer_Pair_Generater: Get all the pair primers out of genome which match the same positon.
 
-Usage:perl ./s6.Primer_Pair_Generater <query_sbjct_file> <primer.tab>
+Usage:perl ./s6.Primer_Pair_Generater <query_sbjct.out> <primer.tab>
 
 
 
 s7.Intermediate_Primer_Finder: Get the intermediate primer.
 
-Usage: ./s7.Intermediate_Primer_Finder <primer.out> <rescreen_out> <inter_primer.out> 2000
+Usage: ./s7.Intermediate_Primer_Finder <primer.tab> <rescreen_file> <inter_primer.out> 2000
 
 if you want to find only position primers in the genome,please set the fourth parameter 0,else you can set the parameter other values default value is 2000.
 
@@ -74,7 +74,7 @@ Usage: ./s8.SSR_Product <genome.fa> <inter_primer.out> <product.out>
 
 
 s1.Find_PotentialSSR: Run s1.Find_PotentialSSR again to make sure the product and the repeat numbers of motif are consistent.
-
+./s1.Find_PotentialSSR --flank 150 --ssr2 6 --ssr3 4 --ssr4 4 --ssr5 4 --ssr6 4 product.out  product_ssr.out
 
 
 s9.SSR_Filter: Filter the results that contain more than one ssr to make sure one pair primer only producing one ssr.
@@ -85,7 +85,7 @@ Usage:./s9.SSR_Filter  <product_ssr.out> <inter_primer.out> <only_primer.out>
 
 s10.Final_Primer_SSRs: Perform the final primer and ssr results.
 
-Usage: ./S10.Final_Primer_SSRs <Only_scaffold.out> <product_ssr.out>  <rescreen.out> <final_primer.out>
+Usage: ./S10.Final_Primer_SSRs <only_primer.out> <product_ssr.out>  <rescreen.out> <final_primer.out>
 
 
 
